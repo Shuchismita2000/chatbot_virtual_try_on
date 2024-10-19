@@ -1,58 +1,44 @@
 import streamlit as st
 from twilio.twiml.messaging_response import MessagingResponse
-from http.server import BaseHTTPRequestHandler, HTTPServer
-import threading
 import json
 import logging
+from urllib.parse import parse_qs
 
-# Set up basic logging
+# Set up logging
 logging.basicConfig(level=logging.INFO)
 
-# Custom handler for HTTP requests
-class TwilioWebhookHandler(BaseHTTPRequestHandler):
-    def do_POST(self):
-        # Read the length of the content and the payload
-        content_length = int(self.headers['Content-Length'])
-        post_data = self.rfile.read(content_length).decode('utf-8')
-        logging.info(f"Received POST data: {post_data}")
+# Streamlit's built-in function to show content on the page
+st.title("Virtual Try-On Chatbot")
+st.write("Webhook status: Listening for incoming messages...")
 
-        # Parse the POST data
-        data = {key: value for key, value in (pair.split('=') for pair in post_data.split('&'))}
-        message_body = data.get('Body', '').strip()
-        from_number = data.get('From', '')
-        media_url = data.get('MediaUrl0', None)
+# Define a webhook handler using Streamlit's built-in support
+def handle_webhook():
+    if st.experimental_get_query_params().get("method", [None])[0] == "POST":
+        # Parse the incoming request body (it's available via st.experimental_get_query_params)
+        request_body = st.experimental_get_query_params().get("body", [""])[0]
+        data = parse_qs(request_body)
 
-        # Log message details
+        message_body = data.get('Body', [''])[0].strip()
+        from_number = data.get('From', [''])[0]
+        media_url = data.get('MediaUrl0', [None])[0]
+
+        # Log the extracted details
         logging.info(f"Message from: {from_number}, Message body: {message_body}")
         if media_url:
             logging.info(f"Received image URL: {media_url}")
+            st.write(f"Received image URL: {media_url}")
 
-        # Create a Twilio response
+        # Respond with a simple message (note: this is just for debugging and viewing in logs)
         response = MessagingResponse()
         if media_url:
             response.message("Image received! Processing now...")
         else:
             response.message("Please send an image to try on!")
 
-        # Respond back to Twilio
-        self.send_response(200)
-        self.send_header('Content-type', 'text/xml')
-        self.end_headers()
-        self.wfile.write(str(response).encode('utf-8'))
+        # Display response message in Streamlit for verification
+        st.write(f"Response: {response}")
 
-# Function to run the server
-def run_server():
-    server_address = ('', 8502)  # Running on a separate port
-    httpd = HTTPServer(server_address, TwilioWebhookHandler)
-    logging.info('Starting Twilio webhook server on port 8502...')
-    httpd.serve_forever()
-
-# Run the server in a separate thread so it doesn't block the Streamlit app
-server_thread = threading.Thread(target=run_server, daemon=True)
-server_thread.start()
-
-# Streamlit UI
-st.title("Virtual Try-On Chatbot")
-st.write("This app listens for Twilio webhook messages at `/webhook` on port 8502.")
+# Call the handler function
+handle_webhook()
 
 
