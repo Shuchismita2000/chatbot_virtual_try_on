@@ -1,44 +1,66 @@
 import streamlit as st
 from twilio.twiml.messaging_response import MessagingResponse
-import json
 import logging
 from urllib.parse import parse_qs
+import requests
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
+# Set up logging to a specific file location
+logging.basicConfig(
+    level=logging.INFO,
+    filename='logfile.log',  # Set your log file location here
+    filemode='a',  # Append mode, use 'w' for overwrite mode
+    format='%(asctime)s - %(levelname)s - %(message)s'  # Optional: set the log message format
+)
 
-# Streamlit's built-in function to show content on the page
+# Streamlit UI
 st.title("Virtual Try-On Chatbot")
-st.write("Webhook status: Listening for incoming messages...")
+st.write("Listening for incoming WhatsApp messages from Twilio...")
 
-# Define a webhook handler using Streamlit's built-in support
+# A placeholder for displaying messages
+message_display = st.empty()
+
+# A placeholder for displaying images
+image_display = st.empty()
+
+# Function to handle incoming webhook requests
 def handle_webhook():
-    if st.experimental_get_query_params().get("method", [None])[0] == "POST":
-        # Parse the incoming request body (it's available via st.experimental_get_query_params)
-        request_body = st.experimental_get_query_params().get("body", [""])[0]
-        data = parse_qs(request_body)
+    # Parse the incoming query params (simulate Twilio webhook)
+    params = st.experimental_get_query_params()
+    method = params.get("method", [None])[0]
+    body = params.get("body", [""])[0]
+    
+    if method == "POST" and body:
+        # Parse the POST body (assuming x-www-form-urlencoded format)
+        data = parse_qs(body)
 
+        # Log message details
+        message_display.write(f"Message {data}")
+
+        # Extract relevant information from the parsed data
         message_body = data.get('Body', [''])[0].strip()
         from_number = data.get('From', [''])[0]
         media_url = data.get('MediaUrl0', [None])[0]
 
-        # Log the extracted details
+        # Log message details
         logging.info(f"Message from: {from_number}, Message body: {message_body}")
         if media_url:
             logging.info(f"Received image URL: {media_url}")
-            st.write(f"Received image URL: {media_url}")
 
-        # Respond with a simple message (note: this is just for debugging and viewing in logs)
+        # Update the Streamlit app dynamically with the message
+        message_display.write(f"Message from {from_number}: {message_body}")
+        if media_url:
+            image_display.image(media_url, caption="Received Image")
+
+        # Prepare a Twilio response message (optional)
         response = MessagingResponse()
         if media_url:
             response.message("Image received! Processing now...")
         else:
             response.message("Please send an image to try on!")
+        
+        # Log the response for debugging
+        logging.info(f"Response: {response}")
 
-        # Display response message in Streamlit for verification
-        st.write(f"Response: {response}")
-
-# Call the handler function
+# Call the webhook handler function
 handle_webhook()
-
 
