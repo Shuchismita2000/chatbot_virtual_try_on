@@ -7,7 +7,7 @@ import requests
 # Set up logging to a specific file location
 logging.basicConfig(
     level=logging.INFO,
-    filename='logfile.log',  # Set your log file location here
+    filename='app/logfile.log',  # Set your log file location here
     filemode='a',  # Append mode, use 'w' for overwrite mode
     format='%(asctime)s - %(levelname)s - %(message)s'  # Optional: set the log message format
 )
