@@ -1,0 +1,10 @@
+We'll create a database to track users, their states, and the images they upload. The schema might look like this:
+
+Database Tables
+Users:
+* id: Unique identifier for each user (primary key).
+* phone_number: The phone number of the user (unique).
+* current_step: The current step in the conversation (e.g., "awaiting_person_image").
+* person_image_url: URL of the uploaded person image (nullable).
+* garment_image_url: URL of the uploaded garment image (nullable).
+* last_updated: Timestamp for the last update.
