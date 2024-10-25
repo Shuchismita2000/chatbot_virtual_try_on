@@ -7,11 +7,11 @@ app = Flask(__name__)
 
 # Set up the route for the root URL
 @app.route('/')
-def index():
-    return "Welcome to the WhatsApp webhook handler!"
+#def index():
+#    return "Welcome to the WhatsApp webhook handler!"
 
 # Set up the route for the webhook
-@app.route('/whatsapp', methods=['GET', 'POST'])
+#@app.route('/whatsapp', methods=['GET', 'POST'])
 def whatsapp_webhook_route():
     return whatsapp_webhook()
 
